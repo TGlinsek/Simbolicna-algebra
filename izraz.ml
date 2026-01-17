@@ -7,9 +7,9 @@ type neznanka = { label : string }
 
 type stevilo =
     | Int of int
-    | Rat of rat
+    | Rat of int
     | Dec of float  (* realno število, ali pa neko izmerjeno število ... Lahko je racionalno, ampak ta lastnost ni bistvena *)
-    | Spremenljivka of spremenljivka  (* parameter, konstanta (pi), nedoločenka *)
+    | Spremenljivka of string  (* parameter, konstanta (pi), nedoločenka *)
 
 type simple_izraz =  (* taki ki nimajo transcendentnih funkcij, zato kr je težko reševat enačbe z njimi *)
     | Stevilo of stevilo
@@ -20,7 +20,7 @@ type simple_izraz =  (* taki ki nimajo transcendentnih funkcij, zato kr je težk
 
 type izraz = 
     | Stevilo of stevilo
-    | Neznanka of neznanka  (* sj se obnaša kot spremenljivka, le da pač omejimo, kje se lahko pojavi v izrazih *)
+    | Neznanka of string  (* sj se obnaša kot spremenljivka, le da pač omejimo, kje se lahko pojavi v izrazih *)
     | Plus of izraz * izraz
     | Minus of izraz * izraz
     | Times of izraz * izraz

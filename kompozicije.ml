@@ -16,7 +16,7 @@ type preoblikuj =  (* različni načini, kako preoblikovati nek izraz. Teh bo ve
 
 
 
-type transformacija =  
+type transformacija 
 (* vsaka funkcija, ki sprejme izraz in vrne nek nov izraz, ampak konsistentno *)
 (* ne rabi bit invertibilna, mora pa bit sestavljena iz osnovnih gradnikov, kr pač tisti bojo konsistentni na izrazih z isto vrednostjo *)
 (* f je tipa izraz -> izraz, ofc *)
@@ -31,28 +31,23 @@ type operacija (* vsaka funkcija, ki sprejme dva izraza in vrne neko kombinacijo
 (* glej komentar pri tipu za transformacijo *)
 
 
-type predikat  (* trasnformacija, ki vrne truth value. ni odvisna od oblike rezultata. torej, ekvivalentna glede na vse ekvivalentne izraze *)
+
 
 
 type manipuliraj_izraz =
     | Identiteta
     | Preoblikuj of preoblikuj * manipuliraj_izraz
 
-type manipuliraj_enačbo =
+type manipuliraj_enacbo =
     | Identiteta
-    | PreoblikujLevoStran of manipuliraj_izraz * manipuliraj_enačbo
-    | PreoblikujDesnoStran of manipuliraj_izraz * manipuliraj_enačbo
-    | Transformacija of transformacija * manipuliraj_enačbo  (* aplicira transformacijo na vsaki strani enačbe *)
+    | PreoblikujLevoStran of manipuliraj_izraz
+    | PreoblikujDesnoStran of manipuliraj_izraz
+    | Transformacija of transformacija  (* aplicira transformacijo na vsaki strani enačbe *)
 
 type sklep = (* enačbo sprejme, ali pa dve; enačbo vrne *)
-    | ManipulirajEnoEnačbo of manipuliraj_enačbo * pointer
+    | ManipulirajEnoEnacbo of manipuliraj_enacbo * pointer
     | Operacija of operacija * pointer * pointer (* isto kot transformacija, le da sprejme dva izraza *) 
 
-type resnicnostna_vrednost = predikat * pointer (* tk ko transformacija, sam da vrne truth value *)
-
 type rezultat =  (* to je konkreten field, konkretna enačba. eni izhajajo iz ene enačbe (transformacija), ene iz dveh (operacija), eni so že na začetku. iz njih lahko kaj sledi (lahko tudi več), lahko pa nič in je to končni rezultat. *)
-    | ZačetniRezultat of enacba
-    | NovRezultat of sklep
-    | RezultatIfTrue of sklep * resnicnostna_vrednost  (* če resnicnostna_vrednost true, uporabimo na dobljeni enačbi "sklep", če ne samo identito *)
-    | RezultatIfFalse of sklep * resnicnostna_vrednost  (* če resnicnostna_vrednost false, uporabimo na dobljeni enačbi "sklep", če ne samo identiteto *)
-
+    | ZacetniRezultat of enacba
+    | NovRezultat of sklep * enacba  (* dodali smo tu enačbo, ker pač ne bomo vsakič šli celotnega postopka računanja novih izrazov. se pa da iz sklepa samega dobit to enačbo, če gremo vse še enkrat poračunat. *)

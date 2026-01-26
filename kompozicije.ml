@@ -1,6 +1,7 @@
-type izraz
+open Izraz
 
-type enacba = izraz * izraz
+type pointer = int
+type enacba = Izraz.izraz * Izraz.izraz
 
 
 
@@ -8,9 +9,14 @@ type enacba = izraz * izraz
 
 
 type preoblikuj =  (* različni načini, kako preoblikovati nek izraz. Teh bo veliko *)
+    | A
+    | B
+    | C
+(*
     | Faktoriziraj
     | Izpostavi
     | ZamenjajVrstniRed of int (* recimo da int predstavlja, kateri člen premakneš na začetek. To je samo primer *)
+*)
 (* nekateri osnovni ukazi bojo dost splošni, npr. komutiraj tako da sinusi na desni, ali pa naredi nekaj vsem eksponentnim funkcijam, ki so prosto v tem izrazu*)
 (* lahko imamo if stavke glede na obliko izrazov. pač, itak vedno vrne ekvivalenten izraz *)
 
@@ -26,11 +32,13 @@ type transformacija
 
 
 
-type operacija (* vsaka funkcija, ki sprejme dva izraza in vrne neko kombinacijo, npr. vsoto izrazov *)
+type operacija = (* vsaka funkcija, ki sprejme dva izraza in vrne neko kombinacijo, npr. vsoto izrazov *)
 (* bistveno je, da so to funkcije, ki na dveh izrazih, ki predstavljata isto stvar, spet vrne isto stvar *)
 (* glej komentar pri tipu za transformacijo *)
-
-
+    | Sestej
+    | Odstej
+    | Zmnozi
+    | Deli
 
 
 
@@ -42,8 +50,10 @@ type manipuliraj_enacbo =
     | Identiteta
     | PreoblikujLevoStran of manipuliraj_izraz
     | PreoblikujDesnoStran of manipuliraj_izraz
+    | PreoblikujObeStrani of manipuliraj_izraz
     | Transformacija of transformacija  (* aplicira transformacijo na vsaki strani enačbe *)
-
+    | Obrni
+    | NaLevo
 type sklep = (* enačbo sprejme, ali pa dve; enačbo vrne *)
     | ManipulirajEnoEnacbo of manipuliraj_enacbo * pointer
     | Operacija of operacija * pointer * pointer (* isto kot transformacija, le da sprejme dva izraza *) 

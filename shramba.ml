@@ -1,11 +1,11 @@
-type izraz  (* lahko so notri spremenljivke, ampak v izrazu od spremenljivke so lahko samo že definirane spremenljivke *)
+open Kompozicije
 
-type spremenljivka = { label : string; vrednost : izraz option }
+type spremenljivka = { label : string; vrednost : Izraz.izraz option }
 type neznanka = { label : string }
 
-let from_string_spremenljivka (label : string) (vrednost : izraz option) = { label; vrednost }
+let from_string_spremenljivka (label : string) (vrednost : Izraz.izraz option) = { label; vrednost }
 let to_string_spremenljivka { label; _ } : string = label
-let to_value_spremenljivka { vrednost ; _} : izraz option = vrednost
+let to_value_spremenljivka { vrednost ; _} : Izraz.izraz option = vrednost
 
 let from_string_neznanka (label : string) = { label }
 let to_string_neznanka { label } : string = label
@@ -13,8 +13,6 @@ let to_string_neznanka { label } : string = label
 
 
 
-type rezultat
-type pointer = int
 
 type shramba = rezultat list
 
@@ -40,8 +38,17 @@ let dodaj_spremenljivko (o : okolje) (spr : spremenljivka) = { o with spremenlji
 
 let dodaj_spremenljivke (o : okolje) (spr : spremenljivka list) = { o with spremenljivke = spr @ o.spremenljivke}
 
+let str_of_spremenljivka (spr : spremenljivka) : string =
+    "{" ^ spr.label ^ "|" ^ (
+        match spr.vrednost with 
+            | Some i -> Izraz.izraz_to_string i 
+            | None -> ""
+    ) ^ "}"
+
 let dodaj_neznanke (o : okolje) (nzn : neznanka list) = { o with neznanke = nzn @ o.neznanke}
 
+let str_of_neznanka (nzn : neznanka) : string =
+    nzn.label
 
 
 let from_string_spremenljivke (spr : string list) = (List.map (fun x -> from_string_spremenljivka x None) spr)

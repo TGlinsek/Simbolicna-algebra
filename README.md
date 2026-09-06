@@ -21,7 +21,7 @@ Ker bi dela res bilo preveč za vse, so implementirane osnovne metode za manipul
 - main.ml - glavne metode, ki uporabijo še parser in se povežejo s python vmesnikom
 - vmesnik.py - GUI vmesnik, narejen s pythonovo knjižnico Tkinter
 
-# Ustvarjanje OCaml datoteke za uporabo pri vmesniku
+# Ustvarjanje OCaml datoteke za uporabo pri vmesniku (Windows)
 
 Posamezne .ml datoteke najprej prevedemo, da dobimo .cmo datoteko (vrstni red je pomemben):
 ```bash

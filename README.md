@@ -17,6 +17,6 @@ Ker bi dela res bilo preveč za vse, so implementirane osnovne metode za manipul
 - izraz.ml - v njem je definiran tip matematičnega izraza, skupaj z raznimi metodami
 - solver.ml - metode za iskanje faktorizacije polinoma (tudi polinomov z več spremenljivkami)
 - parser.ml - osnovni parser za izraze
-- metode.ml - nabor metod, ki povezujejo ostale: metode za prevajanje polinoma v tip za monome, tj. člene oblike x_1^a_1 * x_2^a_2 * ... x_n^a_n
+- metode.ml - nabor metod, ki povezujejo ostale: metode za prevajanje polinoma v tip za monome, tj. člene oblike x_1^a_1 * x_2^a_2 * ... * x_n^a_n
 - main.ml - glavne metode, ki uporabijo še parser in se povežejo s python vmesnikom
-
+- vmesnik.py - GUI vmesnik, narejen s pythonovo knjižnico Tkinter

@@ -1,72 +1,30 @@
 open Racionalno
 
-type stevilo =
-    (*| Int of int*)
-    | Rat of Racionalno.racionalno
-    | Dec of float  (* realno število, ali pa neko izmerjeno število ... Lahko je racionalno, ampak ta lastnost ni bistvena *)
-    | Spremenljivka of string  (* parameter, konstanta (pi), nedoločenka *)
-
-type simple_izraz =  (* taki ki nimajo transcendentnih funkcij, zato kr je težko reševat enačbe z njimi *)
-    | Stevilo of stevilo
-    | Plus of simple_izraz * simple_izraz
-    | Minus of simple_izraz * simple_izraz
-    | Times of simple_izraz * simple_izraz
-    | Div of simple_izraz * simple_izraz
-
-type izraz = (* lahko so notri spremenljivke, ampak v izrazu od spremenljivke so lahko samo že definirane spremenljivke *)
-    | Stevilo of stevilo
-    | Neznanka of string  (* sj se obnaša kot spremenljivka, le da pač omejimo, kje se lahko pojavi v izrazih *)
+type izraz =
+    | Rat of racionalno
+    | Neznanka of string
     | Plus of izraz * izraz
     | Minus of izraz * izraz
     | Times of izraz * izraz
     | Div of izraz * izraz
-    | Root of int * stevilo
+    | Root of int * izraz
     | Pow of int * izraz
-    (*
-    | Sin of simple_izraz
-    | Cos of simple_izraz
-    | Tan of simple_izraz
-    | Exp of simple_izraz
-    | Ln of simple_izraz
-    *)
 
 let rec najdi_neznanke_v_izrazu (i : izraz) : string list =
     match i with
-    | Stevilo x -> []
+    | Rat x -> []
     | Neznanka x -> [x]
     | Plus (a, b) -> najdi_neznanke_v_izrazu a @ najdi_neznanke_v_izrazu b
     | Minus (a, b) -> najdi_neznanke_v_izrazu a @ najdi_neznanke_v_izrazu b
     | Times (a, b) -> najdi_neznanke_v_izrazu a @ najdi_neznanke_v_izrazu b
     | Div (a, b) -> najdi_neznanke_v_izrazu a @ najdi_neznanke_v_izrazu b
     | Pow (_, b) -> najdi_neznanke_v_izrazu b
-    | Root _ -> []
-
-let rec najdi_spremenljivke_v_izrazu (i : izraz) : string list =
-    match i with
-    | Stevilo x -> (
-        match x with
-        | Spremenljivka x -> [x]
-        | _ -> []
-    )
-    | Neznanka x -> []
-    | Plus (a, b) -> najdi_spremenljivke_v_izrazu a @ najdi_spremenljivke_v_izrazu b
-    | Minus (a, b) -> najdi_spremenljivke_v_izrazu a @ najdi_spremenljivke_v_izrazu b
-    | Times (a, b) -> najdi_spremenljivke_v_izrazu a @ najdi_spremenljivke_v_izrazu b
-    | Div (a, b) -> najdi_spremenljivke_v_izrazu a @ najdi_spremenljivke_v_izrazu b
-    | Pow (_, b) -> najdi_spremenljivke_v_izrazu b
-    | Root _ -> []
-
+    | Root (_, b) -> najdi_neznanke_v_izrazu b
 
 
 
 let rat (m : int) (n : int) : izraz =
-    Stevilo (Rat {stevec = m; imenovalec = n})
-
-let dec (m : float) : izraz =
-    Stevilo (Dec m)
-
-let spr (s : string) : izraz =
-    Stevilo (Spremenljivka s)
+    (Rat {stevec = m; imenovalec = n})
 
 let ( ++ ) (i : izraz) (j : izraz) : izraz =
     Plus (i, j)
@@ -147,13 +105,9 @@ let rec vsebuje (i : izraz) (s : string) =
     | Times (x, y) -> vsebuje x s || vsebuje y s
     | Minus (x, y) -> vsebuje x s || vsebuje y s
     | Div (x, y) -> vsebuje x s || vsebuje y s
-    | Stevilo x -> (match x with
-        | Spremenljivka y -> if y = s then true else false
-        | _ -> false)
+    | Rat x -> false
     | Neznanka x -> if x = s then true else false
-    | Root (n, iz) -> (match iz with
-        | Spremenljivka y -> if y = s then true else false
-        | _ -> false)
+    | Root (n, iz) -> vsebuje iz s
     | Pow (n, iz) -> vsebuje iz s
 
 let rec vrni_koeficiente_neznanke (i : izraz) (nedolocenka : string) : ('a * izraz) list =
@@ -161,46 +115,21 @@ let rec vrni_koeficiente_neznanke (i : izraz) (nedolocenka : string) : ('a * izr
     in
     match poenostavi with
     | Plus (x, y) -> vrni_koeficiente_neznanke x nedolocenka @ vrni_koeficiente_neznanke y nedolocenka
-    | Minus (x, y) -> vrni_koeficiente_neznanke x nedolocenka @ (zmnozi (Stevilo (Rat (minus_rat (int_v_rat 1)))) (vrni_koeficiente_neznanke y nedolocenka))
+    | Minus (x, y) -> vrni_koeficiente_neznanke x nedolocenka @ (zmnozi (Rat (minus_rat (int_v_rat 1))) (vrni_koeficiente_neznanke y nedolocenka))
     | Times (x, y) -> konvolucija (vrni_koeficiente_neznanke x nedolocenka) (vrni_koeficiente_neznanke y nedolocenka)
-    | Div (x, y) -> if vsebuje y nedolocenka then zmnozi (Div (Stevilo (Rat (int_v_rat 1)), y)) (vrni_koeficiente_neznanke x nedolocenka)
+    | Div (x, y) -> if vsebuje y nedolocenka then zmnozi (Div (Rat (int_v_rat 1), y)) (vrni_koeficiente_neznanke x nedolocenka)
         else failwith "Izraz ni polinom"
     | Pow _ -> failwith "Smo že poenostavili pow"
     | Root _ -> [(int_v_rat 0, poenostavi)]
-    | Stevilo _ -> [(int_v_rat 0, poenostavi)]
+    | Rat _ -> [(int_v_rat 0, poenostavi)]
     | Neznanka x -> if x = nedolocenka then [(int_v_rat 1, rat 1 1)] else [(int_v_rat 0, poenostavi)]
 
-let rec vrni_koeficiente_spremenljivke (i : izraz) (nedolocenka : string) : ('a * izraz) list =
-    let poenostavi = uporabi_pow i
-    in
-    match poenostavi with
-    | Plus (x, y) -> vrni_koeficiente_spremenljivke x nedolocenka @ vrni_koeficiente_spremenljivke y nedolocenka
-    | Minus (x, y) -> vrni_koeficiente_spremenljivke x nedolocenka @ (zmnozi (Stevilo (Rat (minus_rat (int_v_rat 1)))) (vrni_koeficiente_spremenljivke y nedolocenka))
-    | Times (x, y) -> konvolucija (vrni_koeficiente_spremenljivke x nedolocenka) (vrni_koeficiente_spremenljivke y nedolocenka)
-    | Div (x, y) -> if vsebuje y nedolocenka then zmnozi (Div (Stevilo (Rat (int_v_rat 1)), y)) (vrni_koeficiente_spremenljivke x nedolocenka)
-        else failwith "Izraz ni polinom"
-    | Pow _ -> failwith "Smo že poenostavili pow"
-    | Root (n, st) -> (match st with
-        | Spremenljivka x -> if x = nedolocenka then [({stevec = 1; imenovalec = n}, rat 1 1)] else [(int_v_rat 0, poenostavi)]
-        | _ -> [(int_v_rat 0, poenostavi)]
-    )
-    | Stevilo st -> (match st with
-        | Spremenljivka x -> if x = nedolocenka then [(int_v_rat 1, rat 1 1)] else [(int_v_rat 0, poenostavi)]
-        | _ -> [(int_v_rat 0, poenostavi)]
-    )
-    | Neznanka x -> [(int_v_rat 0, poenostavi)]
 
 let izraz1 = rat 2 1 ++ rat 3 1 ** rat 4 1 
 let izraz2 = rat 3 1 ** rat 4 1 ++ rat 2 1
 
 let sin = izraz1 // izraz2 
 let sinex = izraz1 -- izraz2
-
-let stevilo_to_string (k : stevilo) : string =
-    match k with
-    | Rat x -> izpisi_racionalno x
-    | Dec x -> Float.to_string x
-    | Spremenljivka x -> x
 
 let izraz_to_string (k : izraz) : string =
     let rec aux (i : izraz) : string = 
@@ -210,9 +139,10 @@ let izraz_to_string (k : izraz) : string =
         | Times (x, y) -> aux x ^ " * " ^ aux y
         | Div (x, y) -> aux x ^ " / (" ^ aux' y ^ ")"
         | Pow (n, x) -> "(" ^ aux' x ^ ")^" ^ Int.to_string n
-        | Root (n, x) -> "(" ^ stevilo_to_string x ^ ")^" ^ "(1/" ^ Int.to_string n ^ ")"
+        | Root (n, x) -> "(" ^ aux' x ^ ")^" ^ "(1/" ^ Int.to_string n ^ ")"
         | Neznanka x -> x
-        | Stevilo x -> stevilo_to_string x
+        | Rat x when x <%< (int_v_rat 0) -> "(" ^ izpisi_racionalno x ^ ")"
+        | Rat x -> izpisi_racionalno x
 
     and aux' (j : izraz) : string = 
         match j with
@@ -221,9 +151,10 @@ let izraz_to_string (k : izraz) : string =
         | Times (x, y) -> aux x ^ " * " ^ aux y
         | Div (x, y) -> aux x ^ " / " ^ aux y
         | Pow (n, x) -> "(" ^ aux' x ^ ")^" ^ Int.to_string n
-        | Root (n, x) -> "(" ^ stevilo_to_string x ^ ")^" ^ "(1/" ^ Int.to_string n ^ ")"
+        | Root (n, x) -> "(" ^ aux' x ^ ")^" ^ "(1/" ^ Int.to_string n ^ ")"
         | Neznanka x -> x
-        | Stevilo x -> stevilo_to_string x
+        | Rat x when x <%< (int_v_rat 0) -> "(" ^ izpisi_racionalno x ^ ")"
+        | Rat x -> izpisi_racionalno x
     in
     aux' k
 
@@ -232,7 +163,7 @@ let rati = Neznanka "abc"
 
 let rec bottoms_up (f : izraz -> izraz) (i : izraz) : izraz =
     match i with
-    | Stevilo x -> f (Stevilo x)
+    | Rat x -> f (Rat x)
     | Neznanka x -> f (Neznanka x)
     | Root (x, y) -> f (Root (x, y))
     | Pow (x, y) -> f (Pow (x, bottoms_up f y))
@@ -297,7 +228,7 @@ let rec spravi_div_zunaj (i : izraz) : izraz =  (* popravi dvojne ulomke ipd. *)
         | Div (a, b) -> Div (Pow (k, a), Pow (k, b))
         | _ -> iz
     )
-    | Stevilo _ -> i
+    | Rat _ -> i
     | Neznanka _ -> i
 
 
@@ -327,6 +258,28 @@ let rec distribute (i : izraz) : izraz =
 
 let distribute_polno = bottoms_up distribute
 
+let rec poenostavi_izraz (i : izraz) : izraz = 
+    match i with
+    | Plus (Rat r, b) when r =%= (int_v_rat 0) -> b
+    | Plus (b, Rat r) when r =%= (int_v_rat 0) -> b
+    | Times (Rat r, b) when r =%= (int_v_rat 0) -> rat 0 1
+    | Times (b, Rat r) when r =%= (int_v_rat 0) -> rat 0 1
+    | Times (Rat r, b) when r =%= (int_v_rat 1) -> b
+    | Times (b, Rat r) when r =%= (int_v_rat 1) -> b
+    | Plus (Rat r, Rat s) -> Rat (r +%+ s)
+    | Minus (Rat r, Rat s) -> Rat (r -%- s)
+    | Times (Rat r, Rat s) -> Rat (r *%* s)
+    | Div (Rat r, Rat s) -> Rat (r /%/ s)
+    | Plus (a, b) -> Plus (bottoms_up poenostavi_izraz a, bottoms_up poenostavi_izraz b)
+    | Times (a, b) -> Times (bottoms_up poenostavi_izraz a, bottoms_up poenostavi_izraz b)
+    | Minus (a, b) -> Minus (bottoms_up poenostavi_izraz a, bottoms_up poenostavi_izraz b)
+    | Div (a, b) -> Div (bottoms_up poenostavi_izraz a, bottoms_up poenostavi_izraz b)
+    | Pow (n, b) -> Pow (n, bottoms_up poenostavi_izraz b)
+    | Root (n, b) -> Root (n, bottoms_up poenostavi_izraz b)
+    | _ -> i
+
+let poenostavi_izraz_polno = bottoms_up poenostavi_izraz
+
 let rec asociiraj (i : izraz) : izraz = 
     match i with
     | Times (Times (x, y), z) -> bottoms_up asociiraj (Times (x, Times (y, z)))
@@ -340,10 +293,6 @@ let rec asociiraj (i : izraz) : izraz =
 
 let asociiraj_polno = bottoms_up asociiraj
 
-(*
-let menjaj_vrstni red
-(* lahko določimo, katero neznanko damo na kero stran pa kak je vrstni red, to je pa to *)
-*)
 
 let rec vsebuje_neznanko (i : izraz) =
     match i with
@@ -351,29 +300,17 @@ let rec vsebuje_neznanko (i : izraz) =
     | Minus (x, y) -> vsebuje_neznanko x || vsebuje_neznanko y
     | Times (x, y) -> vsebuje_neznanko x || vsebuje_neznanko y
     | Div (x, y) -> vsebuje_neznanko x || vsebuje_neznanko y
-    | Root (x, y) -> vsebuje_neznanko (Stevilo y)
+    | Root (x, y) -> vsebuje_neznanko y
     | Pow (x, y) -> vsebuje_neznanko y
-    | Stevilo _ -> false
+    | Rat _ -> false
     | Neznanka _ -> true
 
 
-(*
-let rec člen_z_neznanko (i : izraz) =
+let rec poracunaj_stevilski_izraz (i : izraz) : racionalno =
     match i with
-    | Plus (a, b) -> let (x, y) = člen_z_neznanko a
-        in
-        let (z, w) = člen_z_neznanko b
-        in
-        (Plus (x, z), Plus (y, w))
-    | Times (a, b) -> (
-        if vsebuje_neznanko a then
-
-    )
-
-let neznanke_na_levo (i : izraz) : izraz =
-    match i with
-    | Plus (a, b) -> 
-        match 
-*)
-
-
+    | Rat r -> r
+    | Plus (a, b) -> (poracunaj_stevilski_izraz a) +%+ (poracunaj_stevilski_izraz b)
+    | Minus (a, b) -> (poracunaj_stevilski_izraz a) -%- (poracunaj_stevilski_izraz b)
+    | Times (a, b) -> (poracunaj_stevilski_izraz a) *%* (poracunaj_stevilski_izraz b)
+    | Div (a, b) -> (poracunaj_stevilski_izraz a) /%/ (poracunaj_stevilski_izraz b)
+    | _ -> failwith "Ni število"

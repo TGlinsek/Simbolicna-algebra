@@ -21,8 +21,8 @@ let rec loop () =
         in
         match faktorja with
             | None -> print_endline "Ni bila najdena faktorizacija"
-            | Some (x, y) -> (
-                "Faktorizacija: " ^ (Times (x, y) |> poenostavi_izraz_polno |> izraz_to_string) |> print_endline
+            | Some (k, x, y) -> (
+                "Faktorizacija: " ^ (Times (Rat k, Times (x, y)) |> poenostavi_izraz_polno |> izraz_to_string) |> print_endline
             )
     )
     | "P " -> (

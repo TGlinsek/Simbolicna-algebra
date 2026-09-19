@@ -135,7 +135,7 @@ let izraz_to_string (k : izraz) : string =
     let rec aux (i : izraz) : string = 
         match i with
         | Plus (x, y) -> "(" ^ aux' x ^ " + " ^ aux' y ^ ")"
-        | Minus (x, y) -> "(" ^ aux' x ^ " + " ^ aux' y ^ ")"
+        | Minus (x, y) -> "(" ^ aux' x ^ " - " ^ aux y ^ ")"
         | Times (x, y) -> aux x ^ " * " ^ aux y
         | Div (x, y) -> aux x ^ " / (" ^ aux' y ^ ")"
         | Pow (n, x) -> "(" ^ aux' x ^ ")^" ^ Int.to_string n
@@ -143,13 +143,12 @@ let izraz_to_string (k : izraz) : string =
         | Neznanka x -> x
         | Rat x when x <%< (int_v_rat 0) -> "(" ^ izpisi_racionalno x ^ ")"
         | Rat x -> izpisi_racionalno x
-
     and aux' (j : izraz) : string = 
         match j with
         | Plus (x, y) -> aux' x ^ " + " ^ aux' y
         | Minus (x, y) -> aux' x ^ " - " ^ aux y
         | Times (x, y) -> aux x ^ " * " ^ aux y
-        | Div (x, y) -> aux x ^ " / " ^ aux y
+        | Div (x, y) -> aux x ^ " / (" ^ aux' y ^ ")"
         | Pow (n, x) -> "(" ^ aux' x ^ ")^" ^ Int.to_string n
         | Root (n, x) -> "(" ^ aux' x ^ ")^" ^ "(1/" ^ Int.to_string n ^ ")"
         | Neznanka x -> x
@@ -165,7 +164,7 @@ let rec bottoms_up (f : izraz -> izraz) (i : izraz) : izraz =
     match i with
     | Rat x -> f (Rat x)
     | Neznanka x -> f (Neznanka x)
-    | Root (x, y) -> f (Root (x, y))
+    | Root (x, y) -> f (Root (x, bottoms_up f y))
     | Pow (x, y) -> f (Pow (x, bottoms_up f y))
     | Plus (x, y) -> f (Plus (bottoms_up f x, bottoms_up f y))
     | Minus (x, y) -> f (Minus (bottoms_up f x, bottoms_up f y))
@@ -260,29 +259,107 @@ let rec distribute (i : izraz) : izraz =
 
 let distribute_polno = bottoms_up distribute
 
-let rec poenostavi_izraz (i : izraz) : izraz = 
+let poenostavi_aux (i : izraz) : izraz = 
+    (* operacije na enotah se trivialno poenostavijo *)
     match i with
     | Plus (Rat r, b) when r =%= (int_v_rat 0) -> b
     | Plus (b, Rat r) when r =%= (int_v_rat 0) -> b
+    
     | Times (Rat r, b) when r =%= (int_v_rat 0) -> rat 0 1
     | Times (b, Rat r) when r =%= (int_v_rat 0) -> rat 0 1
     | Times (Rat r, b) when r =%= (int_v_rat 1) -> b
     | Times (b, Rat r) when r =%= (int_v_rat 1) -> b
+
+    (* izračunaj izračunljivo *)
     | Plus (Rat r, Rat s) -> Rat (r +%+ s)
     | Minus (Rat r, Rat s) -> Rat (r -%- s)
     | Times (Rat r, Rat s) -> Rat (r *%* s)
     | Div (Rat r, Rat s) -> Rat (r /%/ s)
-    | Plus (a, b) -> Plus (bottoms_up poenostavi_izraz a, bottoms_up poenostavi_izraz b)
-    | Times (a, b) -> Times (bottoms_up poenostavi_izraz a, bottoms_up poenostavi_izraz b)
-    | Minus (a, b) -> Minus (bottoms_up poenostavi_izraz a, bottoms_up poenostavi_izraz b)
-    | Div (a, b) -> Div (bottoms_up poenostavi_izraz a, bottoms_up poenostavi_izraz b)
-    | Pow (n, b) -> Pow (n, bottoms_up poenostavi_izraz b)
-    | Root (n, b) -> Root (n, bottoms_up poenostavi_izraz b)
+
+    | Minus (Rat r, b) when r =%= (int_v_rat 0) -> Times (Rat (int_v_rat (-1)), b)
+    | Minus (b, Rat r) when r =%= (int_v_rat 0) -> b
+    | _ -> i
+
+let rec poenostavi_izraz (i : izraz) : izraz = 
+    (* poenostavi notranje izraze, nato pa vse distribuiraj *)
+    match i with
+    | Plus (a, b) -> poenostavi_aux (Plus (bottoms_up poenostavi_izraz a, bottoms_up poenostavi_izraz b)) |> distribute_polno
+    | Times (a, b) -> poenostavi_aux (Times (bottoms_up poenostavi_izraz a, bottoms_up poenostavi_izraz b)) |> distribute_polno
+    | Minus (a, b) -> poenostavi_aux (Minus (bottoms_up poenostavi_izraz a, bottoms_up poenostavi_izraz b)) |> distribute_polno
+    | Div (a, b) -> poenostavi_aux (Div (bottoms_up poenostavi_izraz a, bottoms_up poenostavi_izraz b)) |> distribute_polno
+    | Pow (n, b) -> poenostavi_aux (Pow (n, bottoms_up poenostavi_izraz b)) |> distribute_polno
+    | Root (n, b) -> poenostavi_aux (Root (n, bottoms_up poenostavi_izraz b)) |> distribute_polno
     | _ -> i
 
 let poenostavi_izraz_polno = bottoms_up poenostavi_izraz
 
+let rec komutiraj_koeficiente (i : izraz) : izraz =
+    (* spravi koeficiente na levo, da jih lahko potem poračunamo med sabo *)
+    match i with
+    (* primeri, kjer imamo dve znani vrednosti (izmed treh) *)
+    | Times (Rat x, Times (Rat y, c)) -> Times (Rat (x *%* y), c)
+    | Times (Rat x, Times (c, Rat y)) -> Times (Rat (x *%* y), c)
+    | Times (Times (Rat y, c), Rat x) -> Times (Rat (x *%* y), c)
+    | Times (Times (c, Rat y), Rat x) -> Times (Rat (x *%* y), c)
+    | Times (Rat x, Div (Rat y, c)) -> Div (Rat (x *%* y), c)
+    | Times (Rat x, Div (c, Rat y)) -> Times (Rat (x /%/ y), c)
+    | Times (Div (Rat y, b), Rat x) -> Div (Rat (x *%* y), b)
+    | Times (Div (b, Rat y), Rat x) -> Times (Rat (x /%/ y), b)
+    | Div (Times (Rat x, b), Rat y) -> Times (Rat (x /%/ y), b)
+    | Div (Times (b, Rat x), Rat y) -> Times (Rat (x /%/ y), b)
+    | Div (Rat x, Times (Rat y, c)) -> Div (Rat (x /%/ y), c)
+    | Div (Rat x, Times (c, Rat y)) -> Div (Rat (x /%/ y), c)
+
+    | Plus (Rat x, Plus (Rat y, c)) -> Plus (Rat (x +%+ y), c)
+    | Plus (Rat x, Plus (b, Rat y)) -> Plus (Rat (x +%+ y), b)
+    | Plus (Plus (Rat y, b), Rat x) -> Plus (Rat (x +%+ y), b)
+    | Plus (Plus (a, Rat y), Rat x) -> Plus (Rat (x +%+ y), a)
+    | Plus (Rat x, Minus (Rat y, c)) -> Minus (Rat (x +%+ y), c)
+    | Plus (Rat x, Minus (c, Rat y)) -> Plus (Rat (x -%- y), c)
+    | Plus (Minus (Rat y, c), Rat x) -> Minus (Rat (x +%+ y), c)
+    | Plus (Minus (c, Rat y), Rat x) -> Plus (Rat (x -%- y), c)
+    | Minus (Rat x, Plus (Rat y, c)) -> Minus (Rat (x -%- y), c)
+    | Minus (Rat x, Plus (b, Rat y)) -> Minus (Rat (x -%- y), b)
+    | Minus (Plus (Rat y, b), Rat x) -> Plus (Rat (y -%- x), b)
+    | Minus (Plus (a, Rat y), Rat x) -> Plus (Rat (y -%- x), a)
+    | Minus (Rat x, Minus (Rat y, c)) -> Plus (Rat (x -%- y), c)
+    | Minus (Rat x, Minus (b, Rat y)) -> Minus (Rat (x +%+ y), b)
+    | Minus (Minus (Rat y, b), Rat x) -> Minus (Rat (y -%- x), b)
+    | Minus (Minus (a, Rat y), Rat x) -> Plus (Rat (minus_rat (x +%+ y)), a)
+
+
+    (* če poznamo samo eno vrednost izmed treh, lahko velikokrat še vedno kak koeficient damo na levo*)
+    | Plus (a, Plus (Rat x, c)) -> Plus (Rat x, Plus (a, c))
+    | Plus (a, Plus (c, Rat x)) -> Plus (Rat x, Plus (a, c))
+    | Times (a, Times (Rat x, c)) -> Times (Rat x, Times (a, c))
+    | Times (a, Times (c, Rat x)) -> Times (Rat x, Times (a, c))
+    | Times (a, Div (Rat x, c)) -> Times (Rat x, Div (a, c))
+
+    | Times (Neznanka a, Neznanka b) -> (
+        if compare a b < 0 then
+            Times (Neznanka a, Neznanka b)
+        else 
+            Times (Neznanka b, Neznanka a)
+        )  (* spravi spremenljivke v členu v nek smiseln vrstni red*)
+    
+    (* poračunaj, če poznamo obe vrednosti *)
+    | Plus (Rat r, Rat s) -> Rat (r +%+ s)
+    | Minus (Rat r, Rat s) -> Rat (r -%- s)
+    | Times (Rat r, Rat s) -> Rat (r *%* s)
+    | Div (Rat r, Rat s) -> Rat (r /%/ s)
+
+    (* spravi koeficient na levo *)
+    | Times (a, Rat x) -> Times (Rat x, a)
+    | Plus (a, Rat x) -> Plus (Rat x, a)
+
+    (* minus kar pretvori v plus, da je čim manj zmede *)
+    | Minus (a, b) -> Plus (a, Times (Rat (int_v_rat (-1)), b)) |> komutiraj_koeficiente
+    | _ -> i
+
+let komutiraj_koeficiente_polno = bottoms_up komutiraj_koeficiente
+
 let rec asociiraj (i : izraz) : izraz = 
+    (* asociativnost *)
     match i with
     | Times (Times (x, y), z) -> bottoms_up asociiraj (Times (x, Times (y, z)))
     | Times (Div (x, y), z) -> bottoms_up asociiraj (Times (x, Div (z, y)))
@@ -290,7 +367,7 @@ let rec asociiraj (i : izraz) : izraz =
     | Plus (Minus (x, y), z) -> bottoms_up asociiraj (Plus (x, Minus (z, y)))
     | Minus (Plus (x, y), z) -> bottoms_up asociiraj (Plus (x, Minus (y, z)))
     | Minus (x, Minus (y, z)) -> bottoms_up asociiraj (Plus (x, Minus (z, y)))
-    | Minus (x, Plus (y, z)) -> bottoms_up asociiraj (Minus (Minus (x, y), z))
+    (* | Minus (x, Plus (y, z)) -> bottoms_up asociiraj (Minus (Minus (x, y), z))*)  (* mogoče raje ne kreiraj dodatnih minusov *)
     | _ -> i
 
 let asociiraj_polno = bottoms_up asociiraj

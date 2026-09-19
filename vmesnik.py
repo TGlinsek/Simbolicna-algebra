@@ -4,6 +4,7 @@ import os
 
 base = os.path.dirname(os.path.abspath(__file__))
 exe_path = os.path.join(base, "_build", "default", "mainpy.exe")
+# mainpy.exe je ime datoteke, ki jo generiramo z ocamlom iz datoteke mainpy.ml
 
 
 COLORS = {

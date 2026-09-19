@@ -125,7 +125,7 @@ let rec vrni_koeficiente_neznanke (i : izraz) (nedolocenka : string) : ('a * izr
     | Neznanka x -> if x = nedolocenka then [(int_v_rat 1, rat 1 1)] else [(int_v_rat 0, poenostavi)]
 
 
-let izraz1 = rat 2 1 ++ rat 3 1 ** rat 4 1 
+let izraz1 = rat 2 1 ++ rat 3 1 ** rat 4 1
 let izraz2 = rat 3 1 ** rat 4 1 ++ rat 2 1
 
 let sin = izraz1 // izraz2 
@@ -177,9 +177,9 @@ let rec bottoms_up (f : izraz -> izraz) (i : izraz) : izraz =
 let rec spravi_div_zunaj (i : izraz) : izraz =  (* popravi dvojne ulomke ipd. *)
     match i with
     | Plus (x', y') -> (
-        let x = spravi_div_zunaj x'
+        let x = bottoms_up spravi_div_zunaj x'
         in
-        let y = spravi_div_zunaj y'
+        let y = bottoms_up spravi_div_zunaj y'
         in
         match (x, y) with
         | Div (a, b), Div (c, d) -> Div (Plus (Times (a, d), Times (b, c)), b ** d)
@@ -188,9 +188,9 @@ let rec spravi_div_zunaj (i : izraz) : izraz =  (* popravi dvojne ulomke ipd. *)
         | _, _ -> i
     )
     | Minus (x', y') -> (
-        let x = spravi_div_zunaj x'
+        let x = bottoms_up spravi_div_zunaj x'
         in
-        let y = spravi_div_zunaj y'
+        let y = bottoms_up spravi_div_zunaj y'
         in
         match (x, y) with
         | Div (a, b), Div (c, d) -> Div (Minus (Times (a, d), Times (b, c)), b ** d)
@@ -199,9 +199,9 @@ let rec spravi_div_zunaj (i : izraz) : izraz =  (* popravi dvojne ulomke ipd. *)
         | _, _ -> i
     )
     | Times (x', y') -> (
-        let x = spravi_div_zunaj x'
+        let x = bottoms_up spravi_div_zunaj x'
         in
-        let y = spravi_div_zunaj y'
+        let y = bottoms_up spravi_div_zunaj y'
         in
         match (x, y) with
         | Div (a, b), Div (c, d) -> Div (a ** c, b ** d)
@@ -210,9 +210,9 @@ let rec spravi_div_zunaj (i : izraz) : izraz =  (* popravi dvojne ulomke ipd. *)
         | _, _ -> i
     )
     | Div (x', y') -> (
-        let x = spravi_div_zunaj x'
+        let x = bottoms_up spravi_div_zunaj x'
         in
-        let y = spravi_div_zunaj y'
+        let y = bottoms_up spravi_div_zunaj y'
         in
         match (x, y) with
         | Div (a, b), Div (c, d) -> Div (a ** d, b ** c)
@@ -222,7 +222,7 @@ let rec spravi_div_zunaj (i : izraz) : izraz =  (* popravi dvojne ulomke ipd. *)
     )
     | Root _ -> i
     | Pow (k, izr) -> (
-        let iz = spravi_div_zunaj izr
+        let iz = bottoms_up spravi_div_zunaj izr
         in
         match iz with
         | Div (a, b) -> Div (Pow (k, a), Pow (k, b))
@@ -231,6 +231,8 @@ let rec spravi_div_zunaj (i : izraz) : izraz =  (* popravi dvojne ulomke ipd. *)
     | Rat _ -> i
     | Neznanka _ -> i
 
+
+let spravi_div_zunaj_polno = bottoms_up spravi_div_zunaj
 
 let rec distribute (i : izraz) : izraz =
     match i with

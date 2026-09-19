@@ -85,7 +85,7 @@ let pretvori_v_vektorje spr (i : izraz) : ((int list) * racionalno) list =
         (* v_in_koef je par vektorja in koeficienta *)
         match clen with
         | Neznanka x -> (
-            let indeks = find_index (fun y -> x = y) spr 
+            let indeks = find_index (fun y -> x = y) spr
             in
             (zamenjaj_pri_indeksu (fst v_in_koef) indeks (fun z -> z + 1), snd v_in_koef)
         )
@@ -128,16 +128,55 @@ let rec polinom_v_izraz (spr) (p : (int list * racionalno) list) : izraz =
     | (l, r) :: xs -> Plus (Times (Rat r, monom_v_izraz spr l), polinom_v_izraz spr xs)
     | [] -> rat 0 1
 
-let main_funkcija (i : izraz) : (izraz * izraz) option =
+
+let rec main_funkcija (i : izraz) : (izraz * izraz) option =
     let spr = spremenljivke i
     in
-    let (a, b) = skupni_veckratnik (pretvori_v_vektorje spr i)
+    let seznam_vektorjev = pretvori_v_vektorje spr i
+    in
+    let (a, b) = skupni_veckratnik seznam_vektorjev
     in
     let rezultat = najdi b
     in
     match rezultat with
     | Some (x, y) -> Some (
         polinom_v_izraz spr (List.map (fun (prva, druga) -> (prva, (int_v_rat druga) *%* a)) x),
-        polinom_v_izraz spr (List.map (fun (prva, druga) -> (prva, (int_v_rat druga) *%* a)) y)
+        polinom_v_izraz spr (List.map (fun (prva, druga) -> (prva, (int_v_rat druga))) y)  (* samo en faktor moramo pomnožiti s koeficientom *)
     )
     | None -> None
+
+
+let poenostavitev (i : izraz) : izraz =  (* P *)
+    i |> uporabi_pow |> distribute_polno |> asociiraj_polno |> spravi_div_zunaj_polno |> poenostavi_izraz_polno
+
+
+let faktorizacija (i : izraz) : izraz * bool =  (* F *)
+    (* bool pove, ali je faktorizacija uspela *)
+    match (i |> spravi_div_zunaj_polno |> poenostavi_izraz_polno) with
+    | Div (a, b) -> (
+        match (main_funkcija a, main_funkcija b) with
+        | Some (x, y), Some (w, z) -> Div (Times (
+            poenostavitev x,
+            poenostavitev y
+        ), Times (
+            poenostavitev w,
+            poenostavitev z
+        )), true
+        | Some (x, y), None -> Div (Times (
+            poenostavitev x,
+            poenostavitev y
+        ), b), true
+        | None, Some (w, z) -> Div (a, Times (
+            poenostavitev w,
+            poenostavitev z
+        )), true
+        | None, None -> Div (a, b), false
+    )
+    | j -> (
+        match main_funkcija j with
+        | Some (x, y) -> Times (
+            poenostavitev x,
+            poenostavitev y
+        ), true
+        | None -> j, false
+    )

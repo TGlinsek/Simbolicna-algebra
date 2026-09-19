@@ -66,14 +66,14 @@ type token =
     | KONEC
 
 let tokenize (s : string) : token list =
-    let len = String.length s 
+    let len = String.length s
     in
-    let is_digit c = '0' <= c && c <= '9' 
+    let is_digit c = '0' <= c && c <= '9'
     in
     let is_letter c =('a' <= c && c <= 'z') || ('A' <= c && c <= 'Z')
     in
     let rec aux i acc =
-        if i >= len then 
+        if i >= len then
             List.rev (KONEC :: acc)  (* akumulator je seznam vseh tokenov, samo obrniti ga je treba *)
         else
             match s.[i] with
@@ -88,12 +88,12 @@ let tokenize (s : string) : token list =
                 | ')' -> aux (i + 1) (ZAKLEPAJ :: acc)
                 | '^' -> aux (i + 1) (NA_POTENCO :: acc)
                 | c when is_digit c ->
-                    let j = ref i 
+                    let j = ref i
                     in
                     while !j < len &&(is_digit s.[!j] || s.[!j] = '.') do
                         j := !j + 1
                     done;
-                    let f = (String.sub s i (!j - i)) 
+                    let f = (String.sub s i (!j - i))
                     in
                     aux !j (FLOAT f :: acc)
                 | c when is_letter c ->
@@ -101,7 +101,7 @@ let tokenize (s : string) : token list =
                     while !j < len && is_letter s.[!j] do  (* pridobi dolžino imena spremenljivke *)
                         j := !j + 1
                     done;
-                    let id = String.sub s i (!j - i) 
+                    let id = String.sub s i (!j - i)
                     in
                     let tok =
                         SPREMENLJIVKA id
@@ -137,7 +137,7 @@ let rec parsaj_stevilo tokens =
 and parsaj_minus_stevila tokens =
     match tokens with
     | MINUS :: rest ->
-        let (e, rest') = parsaj_minus_stevila rest 
+        let (e, rest') = parsaj_minus_stevila rest
         in
         (NegE e, rest')
     | tokens ->
@@ -146,32 +146,32 @@ and parsaj_stevilski_clen tokens =
     let rec aux left rest =
         match rest with
         | TIMES :: rest' ->
-            let (right, rest'') = parsaj_minus_stevila rest' 
+            let (right, rest'') = parsaj_minus_stevila rest'
             in
             aux (TimesE (left, right)) rest''
         | DIV :: rest' ->
-            let (right, rest'') = parsaj_minus_stevila rest' 
+            let (right, rest'') = parsaj_minus_stevila rest'
             in
             aux (DivE (left, right)) rest''
         | rest -> (left, rest)
     in
-    let (left, rest) = parsaj_minus_stevila tokens 
+    let (left, rest) = parsaj_minus_stevila tokens
     in
     aux left rest
 and parsaj_stevilski_izraz tokens =
     let rec aux left rest =
         match rest with
         | PLUS :: rest' ->
-            let (right, rest'') = parsaj_stevilski_clen rest' 
+            let (right, rest'') = parsaj_stevilski_clen rest'
             in
             aux (PlusE (left, right)) rest''
         | MINUS :: rest' ->
-            let (right, rest'') = parsaj_stevilski_clen rest' 
+            let (right, rest'') = parsaj_stevilski_clen rest'
             in
             aux (MinusE (left, right)) rest''
         | rest -> (left, rest)
     in
-    let (left, rest) = parsaj_stevilski_clen tokens 
+    let (left, rest) = parsaj_stevilski_clen tokens
     in
     aux left rest
 
@@ -180,7 +180,7 @@ let rec parsaj_literal tokens =
     | FLOAT f :: rest -> (vrni_ustrezen_stevilski_tip f, rest)
     | SPREMENLJIVKA s :: rest -> (VarE s, rest)
     | UKLEPAJ :: rest -> (
-        let (e, rest') = parsaj_izraz rest 
+        let (e, rest') = parsaj_izraz rest
         in
         match rest' with
         | ZAKLEPAJ :: rest'' -> (e, rest'')
@@ -188,7 +188,7 @@ let rec parsaj_literal tokens =
     )
     | _ -> failwith "Napaka"
 and parsaj_potenco tokens =
-    let (base, rest) = parsaj_literal tokens 
+    let (base, rest) = parsaj_literal tokens
     in
     match rest with
     | NA_POTENCO :: FLOAT n :: rest' ->
@@ -204,7 +204,7 @@ and parsaj_potenco tokens =
 and parsaj_minus tokens =
     match tokens with
     | MINUS :: rest ->
-        let (e, rest') = parsaj_minus rest 
+        let (e, rest') = parsaj_minus rest
         in
         (NegE e, rest')
     | tokens ->
@@ -213,16 +213,16 @@ and parsaj_clen tokens =
     let rec aux left rest =
         match rest with
         | TIMES :: rest' ->
-            let (right, rest'') = parsaj_minus rest' 
+            let (right, rest'') = parsaj_minus rest'
             in
             aux (TimesE (left, right)) rest''
         | DIV :: rest' ->
-            let (right, rest'') = parsaj_minus rest' 
+            let (right, rest'') = parsaj_minus rest'
             in
             aux (DivE (left, right)) rest''
         | rest -> (left, rest)
     in
-    let (left, rest) = parsaj_minus tokens 
+    let (left, rest) = parsaj_minus tokens
     in
     aux left rest
 and parsaj_izraz tokens =
@@ -238,12 +238,12 @@ and parsaj_izraz tokens =
             aux (MinusE (left, right)) rest''
         | rest -> (left, rest)
     in
-    let (left, rest) = parsaj_clen tokens 
+    let (left, rest) = parsaj_clen tokens
     in
     aux left rest
 
 let parsaj (s : string) : expression =
-    let tokens = tokenize s 
+    let tokens = tokenize s
     in
     let (izraz, rest) = parsaj_izraz tokens
     in

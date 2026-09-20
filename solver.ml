@@ -15,10 +15,11 @@ let find_map (f : 'a -> 'b option) (l : 'a list) : 'b option =
 type vektor = int list
 type clen = vektor * int
 type polinom = clen list
+type faktorizacija = polinom * polinom
 
 
 
-let rec sestej_vektorja a b =
+let rec sestej_vektorja (a : vektor) (b : vektor) : vektor =
     match a, b with
     | [], [] -> []
     | x :: xs, y :: ys ->
@@ -26,7 +27,7 @@ let rec sestej_vektorja a b =
     | _ -> failwith "Vektorja morata biti iste dolžine"
 
 
-let rec odstej_vektorja a b =
+let rec odstej_vektorja (a : vektor) (b : vektor) : vektor =
     match a, b with
     | [], [] -> []
     | x :: xs, y :: ys ->
@@ -34,41 +35,41 @@ let rec odstej_vektorja a b =
     | _ -> failwith "Vektorja morata biti iste dolžine"
 
 
-let nenegativen v =
+let nenegativen (v : vektor) : bool =
     (* vse potence so nenegativne *)
     List.for_all (fun x -> x >= 0) v
 
 
-let manjsi_ali_enak a b =
+let manjsi_ali_enak (a : vektor) (b : vektor) : bool =
     (* potence vektorja a so kvečjemu potence vektorja b *)
     List.for_all2 (fun x y -> x <= y) a b
 
 
 
-let enaka a b =
+let enaka (a : vektor) (b : vektor) : bool =
     (* enakost vektorjev *)
     List.for_all2 ( = ) a b
 
 
 
-let rec vektor_je_v_seznamu v sez = 
+let rec vektor_je_v_seznamu (v : vektor) (sez : vektor list) : bool = 
     match sez with
     | [] -> false
     | y :: ys -> enaka v y || vektor_je_v_seznamu v ys
 
 
-let dodaj_vektor x s =
+let dodaj_vektor (x : vektor) (s : vektor list) : vektor list =
     if vektor_je_v_seznamu x s then s
     else x :: s
 
 
 
-let monomi polinom =
+let monomi (polinom : polinom) : vektor list =
     (* seznam vseh različnih monomov *)
     List.fold_left (fun s (e, _) -> dodaj_vektor e s) [] polinom
 
 
-let monomi_vsota a b =
+let monomi_vsota (a : vektor list) (b : vektor list) : vektor list =
     (* seznam vseh seštevkov vektorjev iz a in b *)
     List.fold_left
         (fun s x ->
@@ -81,7 +82,7 @@ let monomi_vsota a b =
         a
 
 
-let rec pristej_eksponent v sez =
+let rec pristej_eksponent (v : vektor) (sez : polinom) =
     (* povečaj število eksponentov za 1. Če še ni v seznamu, ga dodaj *)
     match sez with
     | [] -> [(v, 1)]
@@ -105,17 +106,17 @@ let prestej_vsote_eksponentov (a : vektor list) (b : vektor list) : polinom =
         ) [] a
 
 
-let veckratnost x stevec =
+let veckratnost (x : vektor) (polinom : polinom) : int =
     match List.find_opt
         (fun (y, _) -> enaka x y)
-        stevec
+        polinom
     with
     | Some (_, n) -> n
     | None -> 0
 
 
 
-let se_lahko_odsteje monomi a b =
+let se_lahko_odsteje (monomi : vektor list) (a : vektor list) (b : vektor list) : bool =
     let vsote = prestej_vsote_eksponentov a b
     in
     List.for_all
@@ -124,7 +125,7 @@ let se_lahko_odsteje monomi a b =
         vsote
 
 
-let maksimalni monomi =
+let maksimalni (monomi : vektor list) : vektor list =
     (* maksimalni monomi *)
     List.filter
         (fun x ->
@@ -137,7 +138,7 @@ let maksimalni monomi =
         ) monomi
 
 
-let rec dekompozicije m =
+let rec dekompozicije (m : vektor) : (vektor * vektor) list =
     (* vsi načini, da m zapišeš kot vsoto a in b *)
     match m with
     | [] -> [([], [])]
@@ -151,7 +152,7 @@ let rec dekompozicije m =
             (List.init (x + 1) (fun y -> y))
 
 
-let rec najdi_nove_monome monomi aji bji =
+let rec najdi_nove_monome (monomi : vektor list) (aji : vektor list) (bji : vektor list) : (vektor list * vektor list) list =
     (* aji so za A, bji za B, iščemo f = A*B*)
     let vsote = monomi_vsota aji bji in
 
@@ -210,14 +211,14 @@ let rec najdi_nove_monome monomi aji bji =
                 ) (from_b @ from_a @ nove_dekompozicije)
 
 
-let kandidati_za_nove_monome monomi =
+let kandidati_za_nove_monome (monomi : vektor list) : (vektor list * vektor list) list =
     maksimalni monomi |> concat_map (
         fun m -> dekompozicije m |> concat_map
             (fun (a, b) -> najdi_nove_monome monomi [a] [b])
     )
 
 
-let rec isci_koeficiente monomi dovoljeni_koeficienti =
+let rec isci_koeficiente (monomi : vektor list) (dovoljeni_koeficienti : int list) : polinom list =
     match monomi with
     | [] -> [[]]
     | eksponent :: es ->
@@ -235,7 +236,7 @@ let nekonstanten faktor =
             List.exists (fun x -> x <> 0) eksponenti
         ) faktor
 
-let najdi_faktorje preveri polinom dovoljeni_koeficienti =
+let najdi_faktorje preveri (polinom : polinom) (dovoljeni_koeficienti : int list) : faktorizacija option =
     let s = monomi polinom in
 
     let rec preizkusi_monom sez =
@@ -270,7 +271,7 @@ let najdi_faktorje preveri polinom dovoljeni_koeficienti =
 
 (* preverjanje enakosti zmnožka faktorjev in polinoma *)
 
-let direktno_mnozenje a b =
+let direktno_mnozenje (a : polinom) (b : polinom) : polinom =
     List.fold_left
         (fun acc (ea, ca) ->
             List.fold_left (
@@ -292,11 +293,11 @@ let direktno_mnozenje a b =
     a
 
 
-let odstrani_nicle polinom =
+let odstrani_nicle (polinom : polinom) : polinom =
     List.filter (fun (_, c) -> c <> 0) polinom
 
 
-let preveri a b polinom =
+let preveri (a : polinom) (b : polinom) (polinom : polinom) : bool =
     let zmnozek = direktno_mnozenje a b |> odstrani_nicle
     in
     let polinom = odstrani_nicle polinom
@@ -313,11 +314,11 @@ let preveri a b polinom =
         zmnozek
 
 (* dovoljeni_koeficienti povejo, katere vse možne koeficiente gledamo pri morebitni faktorizaciji *)
-let najdi (p : (int list * int) list) dovoljeni_koeficienti : ((int list * int) list * (int list * int) list) option
+let najdi (p : polinom) (dovoljeni_koeficienti : int list) : faktorizacija option
     = najdi_faktorje preveri p dovoljeni_koeficienti
 
 
-let rec generiraj_dovoljene_koeficiente (n : int) =
+let rec generiraj_dovoljene_koeficiente (n : int) : int list =
     (* generira množico celih števil v intervalu [-n, n] *)
     match n with
     | 0 -> [0]

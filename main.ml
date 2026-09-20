@@ -3,6 +3,7 @@ open Izraz
 open Solver
 open Parser
 open Metode
+open Pomozne
 
 
 

@@ -1,0 +1,11 @@
+(executable
+ (name main)
+ (modules racionalno izraz solver parser pomozne metode main))
+
+(executable
+ (name mainpy)
+ (modules racionalno izraz solver parser pomozne metode mainpy))
+
+(executable
+ (name testni_primeri)
+ (modules racionalno izraz solver parser pomozne metode testni_primeri))

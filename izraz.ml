@@ -270,6 +270,9 @@ let poenostavi_aux (i : izraz) : izraz =
     | Times (Rat r, b) when r =%= (int_v_rat 1) -> b
     | Times (b, Rat r) when r =%= (int_v_rat 1) -> b
 
+    | Div (Rat r, b) when r =%= (int_v_rat 0) -> rat 0 1
+    | Div (b, Rat r) when r =%= (int_v_rat 1) -> b
+
     (* izračunaj izračunljivo *)
     | Plus (Rat r, Rat s) -> Rat (r +%+ s)
     | Minus (Rat r, Rat s) -> Rat (r -%- s)

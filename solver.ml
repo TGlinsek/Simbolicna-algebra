@@ -106,14 +106,6 @@ let prestej_vsote_eksponentov (a : vektor list) (b : vektor list) : polinom =
         ) [] a
 
 
-let veckratnost (x : vektor) (polinom : polinom) : int =
-    match List.find_opt
-        (fun (y, _) -> enaka x y)
-        polinom
-    with
-    | Some (_, n) -> n
-    | None -> 0
-
 
 
 let se_lahko_odsteje (monomi : vektor list) (a : vektor list) (b : vektor list) : bool =

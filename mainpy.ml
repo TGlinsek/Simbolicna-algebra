@@ -5,6 +5,7 @@ open Parser
 open Metode
 
 
+let zgornja_meja = 5  (* to je zgornja meja za koeficiente: vsi koeficienti, ki se lahko pojavijo v iskani faktorizaciji, bodo kvečjemu n, po absolutni vrednosti *)
 
 let substring_do_konca (i : string) (n : int) =
     String.sub i n (String.length i - n)
@@ -17,7 +18,7 @@ let rec loop () =
     | "F " -> (
         let input = substring_do_konca line 2
         in
-        let faktorja = main_funkcija (input |> parsaj_v_izraz)
+        let faktorja = main_funkcija (input |> parsaj_v_izraz) zgornja_meja
         in
         match faktorja with
             | None -> print_endline "Ni bila najdena faktorizacija"

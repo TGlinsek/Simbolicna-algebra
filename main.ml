@@ -6,6 +6,8 @@ open Metode
 
 
 
+let zgornja_meja = 5  (* to je zgornja meja za koeficiente: vsi koeficienti, ki se lahko pojavijo v iskani faktorizaciji, bodo kvečjemu n, po absolutni vrednosti *)
+
 let substring_do_konca (i : string) (n : int) =
     String.sub i n (String.length i - n)
 
@@ -18,7 +20,7 @@ let preberi_input line i : string =
     | 'F' -> (
         let input = i
         in
-        let (faktorizirano, uspelo) = faktorizacija (input |> parsaj_v_izraz)
+        let (faktorizirano, uspelo) = faktorizacija (input |> parsaj_v_izraz) zgornja_meja
         in
         if uspelo then
             "Faktorizacija: " ^ (faktorizirano |> izraz_to_string)

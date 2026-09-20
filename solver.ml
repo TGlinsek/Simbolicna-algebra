@@ -217,12 +217,7 @@ let kandidati_za_nove_monome monomi =
     )
 
 
-(* tu nastavimo, katere vse možne koeficiente gledamo *)
-let dovoljeni_koeficienti =
-    [-5; -4; -3; -2; -1; 1; 2; 3; 4; 5]
-
-
-let rec isci_koeficiente monomi =
+let rec isci_koeficiente monomi dovoljeni_koeficienti =
     match monomi with
     | [] -> [[]]
     | eksponent :: es ->
@@ -230,7 +225,7 @@ let rec isci_koeficiente monomi =
             fun koef ->
                 List.map (
                     fun koefi -> (eksponent, koef) :: koefi
-                ) (isci_koeficiente es)
+                ) (isci_koeficiente es dovoljeni_koeficienti)
             ) dovoljeni_koeficienti
 
 
@@ -240,7 +235,7 @@ let nekonstanten faktor =
             List.exists (fun x -> x <> 0) eksponenti
         ) faktor
 
-let najdi_faktorje preveri polinom =
+let najdi_faktorje preveri polinom dovoljeni_koeficienti =
     let s = monomi polinom in
 
     let rec preizkusi_monom sez =
@@ -248,10 +243,10 @@ let najdi_faktorje preveri polinom =
         | [] -> None
         | (a, b) :: rest ->
             let kandidat_a =
-                isci_koeficiente a
+                isci_koeficiente a dovoljeni_koeficienti
             in
             let kandidat_b =
-                isci_koeficiente b
+                isci_koeficiente b dovoljeni_koeficienti
             in
             let faktorji = (
                 find_map (fun faktor_a ->
@@ -317,4 +312,14 @@ let preveri a b polinom =
         )
         zmnozek
 
-let najdi p = najdi_faktorje preveri p
+(* dovoljeni_koeficienti povejo, katere vse možne koeficiente gledamo pri morebitni faktorizaciji *)
+let najdi (p : (int list * int) list) dovoljeni_koeficienti : ((int list * int) list * (int list * int) list) option
+    = najdi_faktorje preveri p dovoljeni_koeficienti
+
+
+let rec generiraj_dovoljene_koeficiente (n : int) =
+    (* generira množico celih števil v intervalu [-n, n] *)
+    match n with
+    | 0 -> [0]
+    | k -> (-n) :: n :: generiraj_dovoljene_koeficiente (k - 1)
+    

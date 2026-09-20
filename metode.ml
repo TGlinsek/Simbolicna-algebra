@@ -130,32 +130,43 @@ let rec polinom_v_izraz (spr) (p : (int list * racionalno) list) : izraz =
 
 
 let izraz_v_vektorje_in_nazaj (i : izraz) : izraz =
-    (* za pogrupiranje člene z istim vektorjem: seštevanje njihovih koeficientov *)
+    (* za pogrupiranje členov z istim vektorjem: seštevanje njihovih koeficientov *)
     let spr = spremenljivke i
     in
     let seznam_vektorjev = pretvori_v_vektorje spr i
     in
     polinom_v_izraz spr (List.map (fun (prva, druga) -> (prva, druga)) seznam_vektorjev)
 
-let rec main_funkcija (i : izraz) : (racionalno * izraz * izraz) option =
+let rec main_funkcija (i : izraz) (n : int) : (racionalno * izraz * izraz) option =
+    (* vrne faktorizacijo, če jo algoritem najde *)
+
+    (* spremenljivke, ki se pojavijo v izrazu*)
     let spr = spremenljivke i
     in
+    (* seznam vektorjev členov, ki se pojavijo v izrazu *)
     let seznam_vektorjev = pretvori_v_vektorje spr i
     in
+    (* izpostavimo največji skupni delitelj (tako da so vsi koeficienti cela števila) *)
     let (a, b) = skupni_veckratnik seznam_vektorjev
     in
-    let rezultat = najdi b
+    let dovoljeni_koeficienti = generiraj_dovoljene_koeficiente n
+    in
+    (* algoritem za faktoriziranje *)
+    let rezultat = najdi b dovoljeni_koeficienti
     in
     match rezultat with
-    | Some (x, y) -> Some (
-        a,
-        polinom_v_izraz spr (List.map (fun (prva, druga) -> (prva, (int_v_rat druga))) x),
-        polinom_v_izraz spr (List.map (fun (prva, druga) -> (prva, (int_v_rat druga))) y)
-    )
-    | None -> None
+    | Some (x, y) ->  (* trojica (koeficient, faktor1, faktor2) *)
+        Some (
+            a,
+            polinom_v_izraz spr (List.map (fun (prva, druga) -> (prva, (int_v_rat druga))) x),
+            polinom_v_izraz spr (List.map (fun (prva, druga) -> (prva, (int_v_rat druga))) y)
+        )
+    | None -> None  (* faktorizacija ni bila najdena *)
 
 
 let poenostavitev (i : izraz) : izraz =  (* P *)
+    (* kompliciran način, da poenostaviš izraz *)
+
     i |> uporabi_pow |> distribute_polno |> asociiraj_polno |> 
     komutiraj_koeficiente_polno |> poenostavi_izraz_polno |> (* poračunaj koeficiente *)
     spravi_div_zunaj_polno |> (* spravi vse pod en ulomek *)
@@ -166,6 +177,7 @@ let poenostavitev (i : izraz) : izraz =  (* P *)
     komutiraj_koeficiente_polno |> poenostavi_izraz_polno
 
 let rec kompleksnost (i : izraz) : int =
+    (* pomožna funkcija za izbor manj kompleksnega zapisa faktorja *)
     match i with
     | Rat x -> 1
     | Neznanka x -> 1
@@ -181,38 +193,43 @@ let pomozna (trojica : racionalno * izraz * izraz) : izraz =
     (* vrne rat * izraz * izraz, ustrezno poenostavljen *)
     let (k, x, y) = trojica
     in
+    (* preverimo, ali je f ali (-f) bolj smiseln zapis za faktor*)
     let x1 = poenostavitev x
     in
     let x2 = poenostavitev (Times (Rat (int_v_rat (-1)), x))
     in
+    (* enako za drug faktor *)
     let y1 = poenostavitev y
     in
     let y2 = poenostavitev (Times (Rat (int_v_rat (-1)), y))
     in
+    (* kompleksnost zapisa: možnost 1 *)
     let c1 = kompleksnost x1 + kompleksnost y1
     in
+    (* možnost 2 *)
     let c2 = kompleksnost x2 + kompleksnost y2
     in
+    (* izberemo faktor na podlagi kompleksnosti *)
     let prvi_faktor = if c1 < c2 then x1 else x2
     in
     let drugi_faktor = if c1 < c2 then y1 else y2
     in
-    if k =%= int_v_rat 0 then
+    if k =%= int_v_rat 0 then  (* če je koeficient pred faktorjema enak 0 (to se načeloma ne bo dogajalo) *)
         Rat (int_v_rat 0)
     else
-        if k =%= int_v_rat 1 then
+        if k =%= int_v_rat 1 then  (* če je koeficient pred faktorjema enak 1, ga samo ne vključimo v zapis *)
             Times (
                 prvi_faktor,
                 drugi_faktor
             )
         else
-            if k =%= int_v_rat (-1) then
+            if k =%= int_v_rat (-1) then  (* če je koeficient -1, ga raje kar damo v enega izmed faktorjev *)
                 Times (
                     poenostavitev (Times (Rat (int_v_rat (-1)), prvi_faktor)),
                     drugi_faktor
                 )
             else
-                if k <%< int_v_rat 0 then
+                if k <%< int_v_rat 0 then  (* če je koeficient negativen, minus predstavimo v prvi faktor *)
                     Times (
                         Rat (k *%* (int_v_rat (-1))),
                         Times (
@@ -229,18 +246,21 @@ let pomozna (trojica : racionalno * izraz * izraz) : izraz =
                         )
                     )
 
-let faktorizacija (i : izraz) : izraz * bool =  (* F *)
+let faktorizacija (i : izraz) (n : int) : izraz * bool =  (* F *)
+    (* n je zgornja meja, do koder iščemo koeficiente (za koeficient k velja |k| <= n) *)
     (* bool pove, ali je faktorizacija uspela *)
     match (i |> spravi_div_zunaj_polno |> poenostavi_izraz_polno) with
-    | Div (a, b) -> (
-        match (main_funkcija a, main_funkcija b) with
+    | Div (a, b) -> (* če faktoriziramo ulomek, potem faktoriziramo tako števec kot imenovalec, v kolikor to gre. *)
+    (
+        match (main_funkcija a n, main_funkcija b n) with
         | Some t, Some t' -> Div (pomozna t, pomozna t'), true
         | Some t, None -> Div (pomozna t, b), true
         | None, Some t -> Div (a, pomozna t), true
         | None, None -> Div (a, b), false
     )
-    | j -> (
-        match main_funkcija j with
+    | j ->  (* če ni ulomek, potem faktoriziramo kot običajno *)
+    (
+        match main_funkcija j n with
         | Some t -> pomozna t, true
         | None -> j, false
     )

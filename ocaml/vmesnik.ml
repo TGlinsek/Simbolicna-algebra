@@ -20,10 +20,12 @@ let preberi_input line i : string =
         in
         let (faktorizirano, uspelo) = faktorizacija (input |> parsaj_v_izraz) zgornja_meja
         in
-        if uspelo then
-            "Faktorizacija: " ^ (faktorizirano |> izraz_to_string)
-        else
-            "Ni bila najdena faktorizacija"
+        (
+            if uspelo then
+                "Faktorizacija: "
+            else
+                "Ni bila najdena faktorizacija: "
+        ) ^ (faktorizirano |> izraz_to_string)
     )
     | 'P' -> (
         let input = i

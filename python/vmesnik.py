@@ -3,15 +3,17 @@ import subprocess
 import os
 import platform
 
-base = os.path.dirname(os.path.abspath(__file__))
+current_path = os.path.dirname(os.path.abspath(__file__))
+base_path = os.path.abspath(os.path.join(current_path, os.pardir))  # starš od trenutne poti
 
+default_ime = "mainpy"
 if platform.system() == "Windows":
-    exe_name = "main.exe"
+    exe_name = default_ime + ".exe"
 else:
-    exe_name = "main"
+    exe_name = default_ime
 
-exe_path = os.path.join(base, "_build", "default", exe_name)
-# mainpy.exe je ime datoteke, ki jo generiramo z ocamlom iz datoteke mainpy.ml
+exe_path = os.path.join(base_path, "ocaml", "_build", "default", exe_name)
+# mainpy(.exe) je ime datoteke, ki jo generiramo z ocamlom iz datoteke mainpy.ml
 
 
 COLORS = {

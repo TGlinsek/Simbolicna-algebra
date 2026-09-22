@@ -17,11 +17,12 @@ Osnovne datoteke, kjer so implementirane glavne funkcije za računanje z izrazi:
 - racionalno.ml - v njem je definiran tip racionalnih števil
 - izraz.ml - v njem je definiran tip matematičnega izraza, skupaj z raznimi metodami
 - solver.ml - metode za iskanje faktorizacije polinoma (tudi polinomov z več spremenljivkami)
-- parser.ml - osnovni parser za izraze
 - pomozne.ml - nabor pomožnih funkcij za delo s seznami
 - metode.ml - nabor metod, ki povezujejo ostale: metode za prevajanje polinoma v tip za monome, tj. člene oblike x_1^a_1 * x_2^a_2 * ... * x_n^a_n
+- parser.ml - osnovni parser za izraze
 
 Datoteke, povezane z vmesnikom:
+- nastavitve.ml - tu lahko nastavimo, do kam bo algoritem iskal rešitve faktorizacije
 - vmesnik.ml - poveže vse metode skupaj (parsanje začetnega niza, računanje, vrne končni niz)
 - main.ml - tekstovni vmesnik
 - mainpy.ml - python GUI vmesnik

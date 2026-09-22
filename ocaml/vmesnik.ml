@@ -1,12 +1,9 @@
-open Racionalno
 open Izraz
-open Solver
-open Parser
 open Metode
-open Pomozne
+open Parser
+open Nastavitve
 
 
-let zgornja_meja = 5  (* to je zgornja meja za koeficiente: vsi koeficienti, ki se lahko pojavijo v iskani faktorizaciji, bodo kvečjemu n, po absolutni vrednosti *)
 
 let substring_do_konca (i : string) (n : int) =
     String.sub i n (String.length i - n)

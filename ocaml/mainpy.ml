@@ -1,9 +1,3 @@
-open Racionalno
-open Izraz
-open Solver
-open Parser
-open Metode
-open Pomozne
 open Vmesnik
 
 

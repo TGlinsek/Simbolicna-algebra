@@ -1,5 +1,6 @@
-open Izraz
 open Racionalno
+open Izraz
+
 
 type expression =
     | IntE of int

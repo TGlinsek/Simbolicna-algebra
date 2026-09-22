@@ -1,9 +1,6 @@
-open Racionalno
 open Izraz
-open Solver
-open Parser
 open Metode
-open Pomozne
+open Parser
 
 
 let testni_primeri_poenostavitev = [

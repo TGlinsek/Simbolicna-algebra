@@ -1,9 +1,7 @@
 open Racionalno
 open Izraz
 open Solver
-open Parser
 open Pomozne
-
 
 
 

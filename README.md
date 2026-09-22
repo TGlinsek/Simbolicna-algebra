@@ -13,19 +13,23 @@ Ker bi dela res bilo preveč za vse, so implementirane osnovne metode za manipul
 
 # Datoteke
 
+Osnovne datoteke, kjer so implementirane glavne funkcije za računanje z izrazi:
 - racionalno.ml - v njem je definiran tip racionalnih števil
 - izraz.ml - v njem je definiran tip matematičnega izraza, skupaj z raznimi metodami
 - solver.ml - metode za iskanje faktorizacije polinoma (tudi polinomov z več spremenljivkami)
 - parser.ml - osnovni parser za izraze
 - pomozne.ml - nabor pomožnih funkcij za delo s seznami
 - metode.ml - nabor metod, ki povezujejo ostale: metode za prevajanje polinoma v tip za monome, tj. člene oblike x_1^a_1 * x_2^a_2 * ... * x_n^a_n
-- main.ml - poveže vse metode skupaj (parsanje, računanje, izpis)
-- mainpy.ml - podobno kot main.ml, le da je ta za povezavo s Python vmesnikom
+
+Datoteke, povezane z vmesnikom:
+- vmesnik.ml - poveže vse metode skupaj (parsanje začetnega niza, računanje, vrne končni niz)
+- main.ml - tekstovni vmesnik
+- mainpy.ml - python GUI vmesnik
 - vmesnik.py - GUI vmesnik, narejen s pythonovo knjižnico Tkinter
 
 # Poganjanje
 
-Za izdelavo programa uporabimo ukaz
+Za izdelavo programa gremo v mapo `ocaml` in uporabimo ukaz
 ```
 dune build
 ```

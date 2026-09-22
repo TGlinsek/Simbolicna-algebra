@@ -17,24 +17,20 @@ Ker bi dela res bilo preveč za vse, so implementirane osnovne metode za manipul
 - izraz.ml - v njem je definiran tip matematičnega izraza, skupaj z raznimi metodami
 - solver.ml - metode za iskanje faktorizacije polinoma (tudi polinomov z več spremenljivkami)
 - parser.ml - osnovni parser za izraze
+- pomozne.ml - nabor pomožnih funkcij za delo s seznami
 - metode.ml - nabor metod, ki povezujejo ostale: metode za prevajanje polinoma v tip za monome, tj. člene oblike x_1^a_1 * x_2^a_2 * ... * x_n^a_n
-- main.ml - glavne metode, ki uporabijo še parser in se povežejo s python vmesnikom
+- main.ml - poveže vse metode skupaj (parsanje, računanje, izpis)
+- mainpy.ml - podobno kot main.ml, le da je ta za povezavo s Python vmesnikom
 - vmesnik.py - GUI vmesnik, narejen s pythonovo knjižnico Tkinter
 
-# Ustvarjanje OCaml datoteke za uporabo pri vmesniku (Windows)
+# Poganjanje
 
-Posamezne .ml datoteke najprej prevedemo, da dobimo .cmo datoteko (vrstni red je pomemben):
-```bash
-ocamlc -c racionalno.ml
-ocamlc -c izraz.ml
-ocamlc -c solver.ml
-ocamlc -c parser.ml
-ocamlc -c metode.ml
-ocamlc -c main.ml
+Za izdelavo programa uporabimo ukaz
 ```
+dune build
+```
+ki nam generira tri glavne datoteke (z ustrezno končnico, odvisno od operacijskega sistema):
+- `main` je za poganjanje iz ukazne vrstice
+- `mainpy` je za poganjanje prek python vmesnika
+- `testni_primeri` nam poračuna nekaj testnih primerov (prav tako poženemo prek ukazne vrstice)
 
-Nato kreiramo .exe datoteko, ki jo bo vmesnik.py lahko poganjal.
-```bash
-ocamlc -custom -o main.exe racionalno.cmo izraz.cmo solver.cmo parser.cmo metode.cmo main.cmo
-```
-Ime datoteke je nastavljeno na `main.exe`, ampak lahko to po želji spreminjamo.

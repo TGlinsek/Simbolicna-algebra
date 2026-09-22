@@ -1,9 +1,16 @@
 import tkinter as tk
 import subprocess
 import os
+import platform
 
 base = os.path.dirname(os.path.abspath(__file__))
-exe_path = os.path.join(base, "_build", "default", "mainpy.exe")
+
+if platform.system() == "Windows":
+    exe_name = "main.exe"
+else:
+    exe_name = "main"
+
+exe_path = os.path.join(base, "_build", "default", exe_name)
 # mainpy.exe je ime datoteke, ki jo generiramo z ocamlom iz datoteke mainpy.ml
 
 

@@ -4,38 +4,8 @@ open Solver
 open Parser
 open Metode
 open Pomozne
+open Vmesnik
 
-
-
-let zgornja_meja = 5  (* to je zgornja meja za koeficiente: vsi koeficienti, ki se lahko pojavijo v iskani faktorizaciji, bodo kvečjemu n, po absolutni vrednosti *)
-
-let substring_do_konca (i : string) (n : int) =
-    String.sub i n (String.length i - n)
-
-
-(* naredi tako, da najprej vpraša, kaj želiš. tk ko input() v pythonu *)
-
-
-let preberi_input line i : string =
-    match Char.uppercase_ascii (String.sub line 0 1).[0] with
-    | 'F' -> (
-        let input = i
-        in
-        let (faktorizirano, uspelo) = faktorizacija (input |> parsaj_v_izraz) zgornja_meja
-        in
-        if uspelo then
-            "Faktorizacija: " ^ (faktorizirano |> izraz_to_string)
-        else
-            "Ni bila najdena faktorizacija"
-    )
-    | 'P' -> (
-        let input = i
-        in
-        let izraz = input |> parsaj_v_izraz
-        in
-        "Poenostavitev: " ^ (izraz |> poenostavitev |> izraz_to_string)
-    )
-    | _ -> failwith "Neveljaven parameter"
 
 let preberi_input2 line i : string =
     try

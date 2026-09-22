@@ -36,7 +36,7 @@ class Aplikacija:
         btns.pack(pady=10, fill="x")
 
 
-        # tk.Button(btns, text="Poenostavi", command=self.novi_blok, bg="#9999ff").pack(side="left", padx=5)
+        tk.Button(btns, text="Poenostavi", command=self.novi_blok, bg="#9999ff").pack(side="left", padx=5)
         tk.Button(btns, text="Faktoriziraj", command=self.novi_blok2, bg="#9999ff").pack(side="left", padx=5)
 
 

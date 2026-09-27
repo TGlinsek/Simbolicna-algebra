@@ -14,13 +14,15 @@ let testni_primeri_poenostavitev = [
 
 (* število n nam pove, na katerem intervalu [-n, n] naj išče koeficiente faktorizacije *)
 let testni_primeri_faktorizacija = [
+    ("a + 2 + a*x + 2*x", 5);
     ("x * x - y * y", 1);
     ("x * 4 * x * x * x - 64", 4);
     ("x*x - y*y + z*x + y*z", 1);
     ("x*x*x*x*x*x*x*x - 256", 16);
     ("10*x+25*x*x+30*x*x*x", 6);
-    ("(5 * x - 2) * (4 * x + 3)", 5);
-    ("(5 * x - 2) * (4 * y + 3)", 5);
+    ("(5 * x + 2) * (4 * y - 3)", 5);
+    ("(5 * x - 2) * (4 * y - 3)", 5);
+    ("2*z *(x + y)*(3 + 4)", 1)
 ]
 
 

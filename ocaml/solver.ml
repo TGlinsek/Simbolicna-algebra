@@ -22,21 +22,21 @@ type faktorizacija = polinom * polinom
 
 
 
-let rec sestej_vektorja (a : vektor) (b : vektor) : vektor =
+let rec zmnozi_vektorja (a : vektor) (b : vektor) : vektor =
     (* za množenje členov *)
     match a, b with
     | [], [] -> []
     | x :: xs, y :: ys ->
-        (x + y) :: sestej_vektorja xs ys
+        (x + y) :: zmnozi_vektorja xs ys
     | _ -> failwith "Vektorja morata biti iste dolžine"
 
 
-let rec odstej_vektorja (a : vektor) (b : vektor) : vektor =
+let rec deli_vektorja (a : vektor) (b : vektor) : vektor =
     (* deljenje členov *)
     match a, b with
     | [], [] -> []
     | x :: xs, y :: ys ->
-        (x - y) :: odstej_vektorja xs ys
+        (x - y) :: deli_vektorja xs ys
     | _ -> failwith "Vektorja morata biti iste dolžine"
 
 
@@ -70,24 +70,24 @@ let dodaj_vektor (x : vektor) (s : vektorji) : vektorji =
 
 
 
-let monomi (polinom : polinom) : vektorji =
+let monomi (p : polinom) : vektorji =
     (* seznam vseh različnih monomov *)
-    List.fold_left (fun s (e, _) -> dodaj_vektor e s) [] polinom
+    List.fold_left (fun s (e, _) -> dodaj_vektor e s) [] p
 
 
-let monomi_vsota (a : vektorji) (b : vektorji) : vektorji =
+let produkt_vsote_vektorjev (a : vektorji) (b : vektorji) : vektorji =
     (* seznam vseh seštevkov vektorjev iz a in b, tj. produkt monomov *)
     (* produkt a in b: če na a gledamo kot (a_1 + a_2 + ...), na b pa (b_1 + b_2 + ...), dobimo a_1b_1 + a_1b_2 + ... + a_2b_1 + ... *)
     List.fold_left
         (fun s x ->
             List.fold_left
                 (fun s' y ->
-                    dodaj_vektor (sestej_vektorja x y) s'
+                    dodaj_vektor (zmnozi_vektorja x y) s'
                 ) s b
         ) [] a
 
 
-let rec pristej_eksponent (v : vektor) (p : polinom) : polinom =
+let rec pristej_vektor (v : vektor) (p : polinom) : polinom =
     (* v je vektor, tj. monom, ki mu dodelimo koeficient 1 *)
     (* sprejme polinom p, vrne polinom p + 1 * v *)
     match p with
@@ -96,12 +96,12 @@ let rec pristej_eksponent (v : vektor) (p : polinom) : polinom =
         if enaka v y then
             (y, n + 1) :: rest
         else
-            (y, n) :: pristej_eksponent v rest
+            (y, n) :: pristej_vektor v rest
 
 
-(* podobno kot monomi_vsota, le da pri monomi_vsota samo zmnožimo konvolucijsko in se ne oziramo na koeficiente: če obstaja tak člen, potem je koeficient 1 *)
+(* podobno kot produkt_vsote_vektorjev, le da pri produkt_vsote_vektorjev samo zmnožimo konvolucijsko in se ne oziramo na koeficiente: če obstaja tak člen, potem je koeficient 1 *)
 (* tukaj pa upoštevamo koeficiente, zato vrnemo polinom *)
-let prestej_vsote_eksponentov (a : vektorji) (b : vektorji) : polinom =
+let produkt_vsote_monomov (a : vektorji) (b : vektorji) : polinom =
     (* a in b sta seznama vektorjev, torej ju lahko gledamo kot polinoma, kjer ima vsak unikaten monom koeficient 1 *)
     (* funkcija vrne polinom, ki je produkt teh dveh polinomov *)
     let nicelni_polinom = []
@@ -110,7 +110,7 @@ let prestej_vsote_eksponentov (a : vektorji) (b : vektorji) : polinom =
         (fun stevci x ->
             List.fold_left (
                 fun stevci' y ->
-                    pristej_eksponent (sestej_vektorja x y) stevci'
+                    pristej_vektor (zmnozi_vektorja x y) stevci'
             ) stevci b
         ) nicelni_polinom a
 
@@ -118,7 +118,7 @@ let prestej_vsote_eksponentov (a : vektorji) (b : vektorji) : polinom =
 let se_lahko_odsteje (monomi : vektorji) (a : vektorji) (b : vektorji) : bool =
     (* seznam "monomi" vsebuje vse tiste člene v a*b, ki se pojavijo le enkrat (imajo koeficient 1)*)
     (* npr. za (1 + y)*(x + xy) mora "monomi" vsebovati vsaj vektorja x in xy^2 *)
-    let vsote = prestej_vsote_eksponentov a b
+    let vsote = produkt_vsote_monomov a b
     in
     List.for_all
         (fun (x, n) ->
@@ -160,16 +160,14 @@ let rec dekompozicije (m : vektor) : (vektor * vektor) list =
 
 let rec najdi_nove_monome (monomi : vektorji) (aji : vektorji) (bji : vektorji) : (vektorji * vektorji) list =
     (* aji so za A, bji za B, iščemo f = A*B*)
-    let vsote = monomi_vsota aji bji in
-
+    let vsote = produkt_vsote_vektorjev aji bji
+    in
     match
         List.find_opt
             (fun x -> not (vektor_je_v_seznamu x vsote))
             monomi
     with
-
     | None ->  (* None pomeni, da vsak element "monomi" najdemo tudi v "vsote" *)
-
         if se_lahko_odsteje monomi aji bji then
             [(aji, bji)]  (* aji * bji - monomi izniči vse člene v aji*bji, ki so imeli koef. natanko 1. tj. vse tiste je tudi "monomi" imel. Hkrati je vsak člen v "monomi" že bil nekje v "vsote", zato ni kreiral novih členov, le morda je modificiral koefe že obstoječih členov. *)
             (* torej sta aji in bji dobra kandidata za faktorja za "monomi" *)
@@ -183,7 +181,7 @@ let rec najdi_nove_monome (monomi : vektorji) (aji : vektorji) (bji : vektorji) 
         (* če je bji = [b_1, b_2, ...], potem je from_b = [(m/b_1 :: aji, bji); (m/b_2 :: aji, bji); ...] z vsemi elementi m/b_i, ki še niso v aji, in ki imajo vse potence nenegativne *)
         let from_b = List.filter_map (
                 fun y ->
-                    let x = odstej_vektorja m y
+                    let x = deli_vektorja m y
                     in
                     if nenegativen x && not (vektor_je_v_seznamu x aji) then
                         Some (x :: aji, bji)
@@ -195,7 +193,7 @@ let rec najdi_nove_monome (monomi : vektorji) (aji : vektorji) (bji : vektorji) 
         (* m je potem generiran kot y * nek element ajev *)
         let from_a = List.filter_map (
                 fun x ->
-                    let y = odstej_vektorja m x
+                    let y = deli_vektorja m x
                     in
                     if nenegativen y && not (vektor_je_v_seznamu y bji) then
                         Some (aji, y :: bji)
@@ -298,7 +296,7 @@ let direktno_mnozenje (a : polinom) (b : polinom) : polinom =
         (fun acc (ea, ca) ->
             List.fold_left (
                 fun acc' (eb, cb) ->
-                    let e = sestej_vektorja ea eb  (* zmnožimo člena *)
+                    let e = zmnozi_vektorja ea eb  (* zmnožimo člena *)
                     in
                     let c = ca * cb  (* zmnožima koeficienta *)
                     in

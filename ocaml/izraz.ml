@@ -125,12 +125,6 @@ let rec vrni_koeficiente_neznanke (i : izraz) (nedolocenka : string) : ('a * izr
     | Neznanka x -> if x = nedolocenka then [(int_v_rat 1, rat 1 1)] else [(int_v_rat 0, poenostavi)]
 
 
-let izraz1 = rat 2 1 ++ rat 3 1 ** rat 4 1
-let izraz2 = rat 3 1 ** rat 4 1 ++ rat 2 1
-
-let sin = izraz1 // izraz2 
-let sinex = izraz1 -- izraz2
-
 let izraz_to_string (k : izraz) : string =
     let rec aux (i : izraz) : string = 
         match i with
@@ -156,8 +150,6 @@ let izraz_to_string (k : izraz) : string =
         | Rat x -> izpisi_racionalno x
     in
     aux' k
-
-let rati = Neznanka "abc"
 
 
 let rec bottoms_up (f : izraz -> izraz) (i : izraz) : izraz =

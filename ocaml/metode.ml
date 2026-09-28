@@ -4,7 +4,6 @@ open Solver
 open Pomozne
 
 
-
 let spremenljivke (izraz : izraz) : string list =
     let rec aux i =
         match i with
@@ -19,6 +18,7 @@ let spremenljivke (izraz : izraz) : string list =
     in
     List.sort compare (aux izraz)
 
+
 let rec je_polinom (i : izraz) : bool =
     match i with
     | Neznanka _ -> true
@@ -27,11 +27,6 @@ let rec je_polinom (i : izraz) : bool =
     | Minus (a, b) -> je_polinom a && je_polinom b
     | Times (a, b) -> je_polinom a && je_polinom b
     | _ -> false
-
-
-
-
-
 
 
 let pretvori_v_vektorje spr (i : izraz) : (vektor * racionalno) list =
@@ -124,7 +119,6 @@ let rec main_funkcija (i : izraz) (n : int) : (racionalno * izraz * izraz) optio
             polinom_v_izraz spr (List.map (fun (prva, druga) -> (prva, (int_v_rat druga))) y)
         )
     | None -> None  (* faktorizacija ni bila najdena *)
-
 
 
 let veckratnost (x : vektor) (polinom : (vektor * 'a) list) : 'a =

@@ -69,12 +69,6 @@ let dodaj_vektor (x : vektor) (s : vektorji) : vektorji =
     else x :: s
 
 
-
-let monomi (p : polinom) : vektorji =
-    (* seznam vseh različnih monomov *)
-    List.fold_left (fun s (e, _) -> dodaj_vektor e s) [] p
-
-
 let produkt_vsote_vektorjev (a : vektorji) (b : vektorji) : vektorji =
     (* seznam vseh seštevkov vektorjev iz a in b, tj. produkt monomov *)
     (* produkt a in b: če na a gledamo kot (a_1 + a_2 + ...), na b pa (b_1 + b_2 + ...), dobimo a_1b_1 + a_1b_2 + ... + a_2b_1 + ... *)
@@ -113,6 +107,11 @@ let produkt_vsote_monomov (a : vektorji) (b : vektorji) : polinom =
                     pristej_vektor (zmnozi_vektorja x y) stevci'
             ) stevci b
         ) nicelni_polinom a
+
+
+let monomi (p : polinom) : vektorji =
+    (* seznam vseh različnih monomov *)
+    List.fold_left (fun s (e, _) -> dodaj_vektor e s) [] p
 
 
 let se_lahko_odsteje (monomi : vektorji) (a : vektorji) (b : vektorji) : bool =
@@ -285,7 +284,7 @@ let najdi_faktorje preveri (p : polinom) (dovoljeni_koeficienti : int list) : fa
     in
     let kandidati = kandidati_za_nove_monome s  (* tukaj ne gledamo koeficientov: samo vektorje *)
     in
-    preizkusi_monom kandidati  (* vrne prvi element iz kandidatov, ki *)
+    preizkusi_monom kandidati  (* vrne prvi element iz kandidatov, ki prestane vse teste *)
 
 
 (* preverjanje enakosti zmnožka faktorjev in polinoma *)

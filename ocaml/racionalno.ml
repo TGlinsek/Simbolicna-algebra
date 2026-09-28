@@ -49,11 +49,11 @@ let rec gcd_extended (a : int) (b : int) : int * int * int =
             let (gcd, n, m) = gcd_extended b' ((sign b') * (Int.abs a') - b') 
             in
             if kontrola then
-                if gcd != m * sign a * sign b * a + (n - m) * b then failwith "neki"  (* neki in neki2 sta tk ko tist exception v mojmu python Integer classu *)
+                if gcd != m * sign a * sign b * a + (n - m) * b then failwith "napaka"
                 else
                     (gcd, m * sign a * sign b, n - m)
             else
-                if gcd != (n - m) * a + (m * sign a * sign b) * b then failwith "neki2"
+                if gcd != (n - m) * a + (m * sign a * sign b) * b then failwith "napaka2"
                 else
                     (gcd, n - m, m * sign a * sign b)
 
